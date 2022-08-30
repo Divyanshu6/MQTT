@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %} 
+{% load custom_tags %}
+
+<html>
+  <head>
+    <title>Realtime Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/piesocket-js@2"></script>
+</head>
+
+<style>
+.card-text{
+  color:#1a0000;
+}
+
+</style>
+    <div  style="width:700;height:500;margin:45px 0 0 45px;">
+        <div class="card-body" style="width:700;height:500">
+            <div class="row">
+                <div class="col-sm-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div>
+                        <h5 style="display:inline;">Device ID :</h5>
+                        <h5 style="float:right;font-size:22px;">{{meter_address}}</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <div>
+                        <h5 style="display:inline;">Device Name :</h5>
+                        <h5 style="float:right;font-size:22px;">Device {{device_name}}</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              <div class="col-sm-3">
+                <div class="card">
+                  <div class="card-body">
+                    <div>
+                      <h5 style="display:inline;">Device status :</h5>
+                      <h5 style="float:right;font-size:22px;color:Green" id="Device status">Live</h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+              <br><br><br>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h5 class="card-title">Frequency</h5>
+                        <p class="card-text" id="frequency">{{frequency}}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h5 class="card-title" >Phase current</h5>
+                        <p class="card-text" id="phase_current">{{phase_current}}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h5 class="card-title">Voltage</h5>
+                        <p class="card-text" id="voltage">{{voltage}}</p>
+                      </div>
+                    </div>
+                  </div>
+  
+              </div>
+        </div>
+      </div>
+<ul>
+</ul>
+</html>
+<body>
+  <div style="width:500px;margin:10px;">
+          <h2>Realtime Graph</h2>
+          <canvas id="myChart"></canvas>
+      </div>
+  </body>
+<script>
+  const ctx = document.getElementById('myChart');
+  const myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['neutral_current', 'phase_current'],
+        datasets: [{
+            label: 'Ampere',
+            data: [1.32,1.2],
+              backgroundColor: [
+                  'rgba(255, 99, 132, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(255, 159, 64, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(255, 99, 132, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)'
+              ],
+              borderWidth: 1
+          }]
+      },
+      options: {
+          scales: {
+              y: {
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+
+    const socket = new WebSocket('ws://localhost:8000/ws/url/');
+    socket.addEventListener('open', (event) => {
+        socket.send('Hello client!');
+    });
+
+    socket.addEventListener('message', (event) => {
+        json_data=JSON.parse(event.data);
+        if ((new Date()-new Date(json_data.meter_time))/60000 > 3){
+          document.getElementById('Device status').innerHTML='Down';
+          document.getElementById('Device status').style.color = 'red';
+        }
+        if (json_data.meter_address=='{{meter_address}}'){
+        console.log('Message from server ', json_data.meter_address);
+        console.log('Message from server ', json_data);
+        document.getElementById('frequency').innerHTML=json_data.frequency
+        document.getElementById('phase_current').innerHTML=json_data.phase_current
+        document.getElementById('voltage').innerHTML=json_data.voltage  
+        myChart.data.datasets[0].data[0]=json_data.neutral_current;
+        myChart.data.datasets[0].data[1]=json_data.phase_current;
+		    myChart.update();
+        }
+    });
+
+    socket.addEventListener('onclose', (event) => {
+      console.log("Connection is closed...");
+  });
+    
+  console.log(new Date())
+  </script>
+
+
+{% endblock %}

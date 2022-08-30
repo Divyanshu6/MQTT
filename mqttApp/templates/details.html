@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %} 
+{% load custom_tags %}
+<html>
+<form method='get'>
+    <div  style="width:700;height:500;margin:45px 0 0 45px;">
+        <div class="card-body" style="width:700;height:500">
+            <div class="row">
+              {% for i  in keys %}
+                <div class="col-sm-3">
+                  <div class="card">
+                    <div class="card-body">
+                    <div>
+                      <h5  style="display:inline;">Device {{ forloop.counter }}</h5>
+                      <p style="float:right;color:Green;font-size:22px;">Live</p>
+                    </div>
+                      <p class="card-text">{{i}}</p>
+                      <a href="{% url 'deviceDetails' id=i name=forloop.counter %}" class="btn btn-primary">Check details</a>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+        </div>
+      </div>
+<ul>
+</ul>
+</form>
+</html>
+
+{% endblock %}
+
